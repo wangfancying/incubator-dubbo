@@ -329,6 +329,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
         checkAndUpdateSubConfigs();
 
         if (provider != null) {
+        	// 获取 export 和 delay 配置
             if (export == null) {
                 export = provider.getExport();
             }
@@ -336,24 +337,31 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
                 delay = provider.getDelay();
             }
         }
+
+        // 如果 export 为false，则不导出服务
         if (export != null && !export) {
             return;
         }
 
+        // 如果 delay > 0, 延迟导出服务
         if (delay != null && delay > 0) {
             delayExportExecutor.schedule(this::doExport, delay, TimeUnit.MILLISECONDS);
+        //立即导出服务
         } else {
             doExport();
         }
     }
 
     protected synchronized void doExport() {
-        if (unexported) {
+        // 不让导出
+    	if (unexported) {
             throw new IllegalStateException("The service " + interfaceClass.getName() + " has already unexported!");
         }
+        // 是否已经导出
         if (exported) {
             return;
         }
+        // 设置 exported = true;
         exported = true;
 
         if (StringUtils.isEmpty(path)) {
